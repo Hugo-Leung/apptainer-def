@@ -1,0 +1,31 @@
+Bootstrap: docker
+From: ubuntu:latest
+
+%setup
+	mkdir -p ${APPTAINER_ROOTFS}/usr/local/share/ca-certificates/JLab
+	wget https://pki.jlab.org/JLabCA.crt -O ${APPTAINER_ROOTFS}/usr/local/share/ca-certificates/JLab/JLabCA.crt
+	mkdir -p ${APPTAINER_ROOTFS}/Users/${USER}
+
+%post
+	apt-get -o "Acquire::https::Verify-Peer=false" update
+	apt-get -o "Acquire::https::Verify-Peer=false" install -y ca-certificates
+	update-ca-certificates
+	apt update
+	apt upgrade -y
+	apt install -y software-properties-common
+	add-apt-repository ppa:inkscape.dev/stable
+	apt update
+	apt install -y inkscape python3-tinycss2  python3-gi gir1.2-gtk-3.0 gir1.2-gtksource-3.0 wget python3 tar texlive-full python3-tk
+
+	VERSION=1.12.0
+	cd /opt/
+	wget https://github.com/textext/textext/releases/download/${VERSION}/TexText-Linux-${VERSION}.tar.gz
+	tar xf TexText-Linux-${VERSION}.tar.gz
+	cd textext-${VERSION}
+	python3 setup.py --all-users
+	cd /opt/
+	rm TexText-Linux-${VERSION}.tar.gz
+	rm -rf textext-${VERSION}
+
+%runscript
+	inkscape "$@"
